@@ -20,9 +20,13 @@ ipcMain.handle('register-user', async (_, id, password) => {
   }
 });
 
+ipcMain.handle('store-email', async (_, email) => {
+  currentUserEmail = email;
+  console.log(`E-mail armazenado: ${email}`);
+});
 
 // Abre o dashboard no navegador padrão
-ipcMain.on('open-dashboard', () => {
+ipcMain.handle('open-dashboard', () => {
   shell.openExternal('https://bigfoot-connect-site.vercel.app/dashboard');
 });
 
@@ -32,19 +36,20 @@ let minerProcess = null;
 let miningThreads = 4;
 let totalSharedToday = 0;
 let miningInterval = null;
+let currentUserEmail = null;
 
 function createWindow() {
   console.log('Criando janela principal...');
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    icon: path.join(__dirname, 'assets', 'icon.ico'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
-  });
+  width: 800,
+  height: 600,
+  icon: path.join(__dirname, 'assets', 'icon.ico'),
+  webPreferences: {
+  nodeIntegration: false,
+  contextIsolation: true, 
+  preload: path.join(__dirname, 'preload.js')
+}
+});
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
@@ -187,6 +192,28 @@ function stopMining() {
   }
 }
 
+function syncSharedData() {
+  if (!currentUserEmail) {
+    console.log('Nenhum e-mail de usuário registrado. Não enviando dados.');
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const amount = parseFloat(totalSharedToday.toFixed(2));
+
+  axios.post('https://bigfoot-connect-site.vercel.app/api/usage', {
+    email: currentUserEmail,
+    date: today,
+    amount,
+  })
+  .then(() => {
+    console.log('Dados de uso enviados com sucesso!');
+  })
+  .catch(err => {
+    console.error('Erro ao enviar dados de uso:', err.message);
+  });
+}
+
   function startSimulatedSharing() {
   if (miningInterval) return;
   miningInterval = setInterval(() => {
@@ -220,4 +247,5 @@ app.on('before-quit', () => {
   if (mainWindow) {
     mainWindow.webContents.send('shared-data', totalSharedToday);
   }
+  syncSharedData();
 });

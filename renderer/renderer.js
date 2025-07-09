@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const auth = firebase.auth();
+const db = firebase.firestore();
   window.firebaseAuth = auth;
   window.firebaseFns = {
     signInWithEmailAndPassword: auth.signInWithEmailAndPassword.bind(auth),
@@ -46,33 +47,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const translations = {
-    pt: {
-      connect: "🔌 Conectar / Desconectar",
-      stop: "🛑 Parar",
-      statusDisconnected: "Desconectado",
-      statusMining: "Compartilhando",
-      received: "Você já recebeu:",
-      config: "⚙️ Configurações",
-      login: "🔐 Login",
-      logout: "🚪 Sair",
-      networkQuality: "Qualidade da Rede:",
-      dashboard: "🖥️ Dashboard",
-      selectThreadsLabel: "Selecione o nível de compartilhamento"
-    },
-    en: {
-      connect: "🔌 Connect / Disconnect",
-      stop: "🛑 Stop",
-      statusDisconnected: "Disconnected",
-      statusMining: "Sharing",
-      received: "You’ve received:",
-      config: "⚙️ Settings",
-      login: "🔐 Login",
-      logout: "🚪 Logout",
-      networkQuality: "Network Quality:",
-      dashboard: "🖥️ Dashboard",
-      selectThreadsLabel: "Select sharing level"
-    }
-  };
+  pt: {
+    connect: "🔌 Conectar / Desconectar",
+    stop: "🛑 Parar",
+    statusDisconnected: "Desconectado",
+    statusMining: "Compartilhando",
+    received: "Você já recebeu:",
+    config: "⚙️ Configurações",
+    login: "🔐 Login",
+    logout: "🚪 Sair",
+    networkQuality: "Qualidade da Rede:",
+    dashboard: "🖥️ Dashboard",
+    selectThreadsLabel: "Selecione o nível de compartilhamento",
+    theme: "🌓 Tema",
+    faq: "❓ F.A.Q",
+    settingsTitle: "Configurações",
+    selectLanguage: "Idioma:",
+    save: "Salvar",
+    loginTitle: "Entrar / Cadastrar",
+    emailPlaceholder: "Seu e-mail",
+    passwordPlaceholder: "Senha",
+    loginBtn: "Entrar",
+    registerBtn: "Cadastrar"
+  },
+  en: {
+    connect: "🔌 Connect / Disconnect",
+    stop: "🛑 Stop",
+    statusDisconnected: "Disconnected",
+    statusMining: "Sharing",
+    received: "You’ve received:",
+    config: "⚙️ Settings",
+    login: "🔐 Login",
+    logout: "🚪 Logout",
+    networkQuality: "Network Quality:",
+    dashboard: "🖥️ Dashboard",
+    selectThreadsLabel: "Select sharing level",
+    theme: "🌓 Theme",
+    faq: "❓ F.A.Q",
+    settingsTitle: "Settings",
+    selectLanguage: "Language:",
+    save: "Save",
+    loginTitle: "Login / Register",
+    emailPlaceholder: "Your email",
+    passwordPlaceholder: "Password",
+    loginBtn: "Login",
+    registerBtn: "Register"
+  }
+};
 
   const faqContent = {
     pt: [
@@ -229,11 +250,22 @@ document.addEventListener('DOMContentLoaded', () => {
     networkQualityValue.textContent = `${networkQuality}%`;
     dashboardBtn.textContent = t.dashboard;
 
+document.getElementById("themeBtn").textContent = t.theme;
+document.getElementById("faqBtn").textContent = t.faq;
+document.getElementById("settingsTitle").textContent = t.settingsTitle;
+document.querySelector('label[for="languageSelect"]').textContent = t.selectLanguage;
+document.getElementById("saveSettingsBtn").textContent = t.save;
+document.getElementById("loginTitle").textContent = t.loginTitle;
+document.getElementById("userEmail").placeholder = t.emailPlaceholder;
+document.getElementById("userPassword").placeholder = t.passwordPlaceholder;
+document.getElementById("loginBtn").textContent = t.loginBtn;
+document.getElementById("registerBtn").textContent = t.registerBtn;
+
     authButtons.innerHTML = isLoggedIn
-      ? `<button class="icon-button" id="settingsBtn" aria-label="Abrir configurações">${t.config}</button>
-         <button class="icon-button" id="logoutBtn" aria-label="Sair">${t.logout}</button>`
-      : `<button class="icon-button" id="settingsBtn" aria-label="Abrir configurações">${t.config}</button>
-         <button class="icon-button" id="loginModalBtn" aria-label="Fazer login">${t.login}</button>`;
+  ? `<button class="icon-button" id="logoutBtn" aria-label="Sair">${t.logout}</button>
+     <button class="icon-button" id="settingsBtn" aria-label="Abrir configurações">${t.config}</button>`
+  : `<button class="icon-button" id="loginModalBtn" aria-label="Fazer login">${t.login}</button>
+     <button class="icon-button" id="settingsBtn" aria-label="Abrir configurações">${t.config}</button>`;
     console.log('Botões de autenticação renderizados:', authButtons.innerHTML);
 
     // Adiciona ouvintes para os botões de autenticação dinâmicos
@@ -254,16 +286,41 @@ document.addEventListener('DOMContentLoaded', () => {
     updateText();
   }
 
+function registrarUsoDiario(qtdEmMB) {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  const hoje = new Date().toISOString().split('T')[0]; // formato YYYY-MM-DD
+  const docRef = db.collection("users").doc(user.uid).collection("dailyUsage").doc(hoje);
+
+  docRef.get().then(docSnapshot => {
+    if (docSnapshot.exists) {
+      docRef.update({
+        shared: firebase.firestore.FieldValue.increment(qtdEmMB),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } else {
+      docRef.set({
+        shared: qtdEmMB,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  }).catch(error => {
+    console.error("Erro ao registrar uso diário:", error);
+  });
+}
+
   // Simula mineração
   function simulateMining() {
-    if (!isMining) {
-      console.log('Mineração não ativa, ignorando simulação.');
-      return;
-    }
-    pktMined++;
-    console.log('Simulando mineração, pktMined:', pktMined);
-    updateText();
+  if (!isMining) {
+    console.log('Mineração não ativa, ignorando simulação.');
+    return;
   }
+  pktMined++;
+  registrarUsoDiario(1); // cada execução simula 1 MB compartilhado
+  console.log('Simulando mineração, pktMined:', pktMined);
+  updateText();
+}
 
   // Toggle modais
   function toggleModal(id) {
@@ -372,16 +429,20 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const { signInWithEmailAndPassword } = window.firebaseFns;
       signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          console.log('Login bem-sucedido:', userCredential.user.email);
-          console.log('Detalhes do usuário:', {
-            uid: userCredential.user.uid,
-            emailVerified: userCredential.user.emailVerified
-          });
-          isLoggedIn = true;
-          toggleModal('loginModal');
-          updateText();
-        })
+  .then(userCredential => {
+    console.log('Login bem-sucedido:', userCredential.user.email);
+    if (window.electronAPI?.storeEmail) {
+      window.electronAPI.storeEmail(userCredential.user.email);
+    }
+    console.log('Detalhes do usuário:', {
+      uid: userCredential.user.uid,
+      emailVerified: userCredential.user.emailVerified
+    });
+    isLoggedIn = true;
+    toggleModal('loginModal');
+    updateText();
+  })
+
         .catch(error => {
           console.error('Erro ao entrar:', error.code, error.message);
           let message = currentLang === 'pt' ? 'Erro ao entrar. Verifique o e-mail e a senha.' : 'Login failed. Check email and password.';
@@ -550,15 +611,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Evento do botão Dashboard
-  function openDashboard() {
-    console.log('Abrindo dashboard');
-    if (window.electronAPI && window.electronAPI.openDashboard) {
-      window.electronAPI.openDashboard();
-    } else {
-      console.error('API do Electron não disponível para dashboard');
-      alert(currentLang === 'pt' ? 'Erro: API do Electron não disponível.' : 'Error: Electron API not available.');
-    }
+function openDashboard() {
+  console.log('Abrindo dashboard externo...');
+  if (window.electronAPI?.openDashboard) {
+    window.electronAPI.openDashboard();
+  } else {
+    console.error('API openDashboard não disponível');
   }
+}
 
   // Listeners para eventos do Electron
   if (window.electronAPI) {

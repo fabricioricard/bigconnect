@@ -239,6 +239,7 @@
   <!-- Firebase compat (funciona no Electron renderer) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
   <script src="renderer.js"></script>
 </head>
 <body>
@@ -297,8 +298,8 @@
       <h3 id="settingsTitle">Configurações</h3>
       <label for="languageSelect">Idioma:</label>
       <select id="languageSelect" name="languageSelect" aria-label="Selecionar idioma">
-        <option value="pt">Português</option>
         <option value="en">English</option>
+<option value="pt">Português</option>
       </select>
       <button class="icon-button" id="saveSettingsBtn" aria-label="Salvar configurações">Salvar</button>
     </div>
