@@ -167,6 +167,68 @@ const db = firebase.firestore();
     })
     .catch(error => console.error('Erro na persistência:', error.code, error.message));
 
+  // Exibir nome do usuário logado
+  const userWelcome = document.getElementById('userWelcome');
+  if (user && user.email) {
+    userWelcome.textContent = currentLang === 'pt'
+      ? `Bem-vindo, ${user.email}`
+      : `Welcome, ${user.email}`;
+    userWelcome.style.display = 'block';
+  } else {
+    userWelcome.style.display = 'none';
+  }
+
+  // Carregar gráfico de uso
+  if (user) {
+    const usageRef = db.collection("users").doc(user.uid).collection("dailyUsage");
+    const today = new Date();
+    const past7Days = [...Array(7)].map((_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (6 - i));
+      return date.toISOString().split('T')[0];
+    });
+
+    usageRef
+      .where(firebase.firestore.FieldPath.documentId(), 'in', past7Days)
+      .get()
+      .then(snapshot => {
+        const labels = [];
+        const data = [];
+
+        past7Days.forEach(date => {
+          labels.push(date.substr(5)); // Exibe só MM-DD
+          const doc = snapshot.docs.find(d => d.id === date);
+          data.push(doc?.data()?.shared || 0);
+        });
+
+        const ctx = document.getElementById('usageChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: currentLang === 'pt' ? 'Uso diário (MB)' : 'Daily Usage (MB)',
+              data,
+              backgroundColor: '#4ade80'
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              }
+            }
+          }
+        });
+      })
+      .catch(err => {
+        console.error('Erro ao carregar gráfico de uso:', err);
+      });
+  }
+
   // Adiciona ouvintes de eventos
   themeBtn.addEventListener('click', toggleTheme);
   faqBtn.addEventListener('click', toggleFAQ);
