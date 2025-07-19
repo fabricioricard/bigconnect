@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', () => {
   // Configuração do Firebase
   const firebaseConfig = {
@@ -723,4 +724,228 @@ function openDashboard() {
 
   // Inicializa interface
   updateText();
+=======
+import { translations, currentLang, setLanguage, updateThreadOptionsLanguage } from './i18n.js';
+import { initializeFirebase, setupAuth, handleLogin, handleLogout, handleRegister } from './auth.js';
+import { initializeChart, updateChartData, registrarUsoDiario } from './chart.js';
+import { initializeTheme, toggleTheme } from './theme.js';
+import { renderFAQ } from './faq.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const authButtons = document.getElementById('authButtons');
+  const connectBtn = document.getElementById('connectBtn');
+  const statusText = document.getElementById('statusText');
+  const networkQualityValue = document.getElementById('networkQualityValue');
+  const dashboardBtn = document.getElementById('dashboardBtn');
+  const faqSection = document.getElementById('faqSection');
+  const languageSelect = document.getElementById('languageSelect');
+  const threadSelector = document.getElementById('threadSelector');
+  const themeBtn = document.getElementById('themeBtn');
+  const settingsModal = document.getElementById('settingsModal');
+  const loginModal = document.getElementById('loginModal');
+  const loginForm = document.getElementById('loginForm');
+  const closeSettingsModal = document.getElementById('closeSettingsModal');
+  const closeLoginModal = document.getElementById('closeLoginModal');
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const userGreeting = document.getElementById('userGreeting');
+  const usageGraphTitle = document.getElementById('usageGraphTitle');
+  const faqBtn = document.getElementById('faqBtn');
+
+  window.isLoggedIn = false;
+  window.isMining = false;
+  window.pktMined = 0;
+  let networkQuality = 0;
+
+  const { auth, db } = initializeFirebase();
+  const usageChart = initializeChart(currentLang, translations);
+  initializeTheme();
+
+  setupAuth(auth, updateText, () => updateChartData(usageChart, db, currentLang, translations), toggleModal);
+
+  function updateText() {
+    const t = translations[currentLang];
+
+    connectBtn.textContent = window.isMining ? t.stop : t.connect;
+    connectBtn.disabled = !window.isLoggedIn;
+    statusText.textContent = window.isMining ? t.statusMining : t.statusDisconnected;
+    document.getElementById('threadsLabel').textContent = t.selectThreadsLabel;
+    document.querySelector('.quality strong').textContent = t.networkQuality;
+    networkQualityValue.textContent = `${networkQuality}%`;
+    dashboardBtn.textContent = t.dashboard;
+    themeBtn.textContent = t.theme;
+    document.getElementById('settingsTitle').textContent = t.settingsTitle;
+    document.querySelector('label[for="languageSelect"]').textContent = t.selectLanguage;
+    saveSettingsBtn.textContent = t.save;
+    document.getElementById('loginTitle').textContent = t.loginTitle;
+    document.getElementById('userEmail').placeholder = t.emailPlaceholder;
+    document.getElementById('userPassword').placeholder = t.passwordPlaceholder;
+    document.getElementById('loginBtn').textContent = t.loginBtn;
+    registerBtn.textContent = t.registerBtn;
+
+    if (usageGraphTitle) usageGraphTitle.textContent = t.usageGraphTitle;
+
+    if (window.isLoggedIn && userGreeting) {
+      const user = auth.currentUser;
+      if (user?.email) {
+        userGreeting.textContent = `${t.greeting}${user.email}`;
+        userGreeting.classList.add('show');
+      } else {
+        userGreeting.textContent = '';
+        userGreeting.classList.remove('show');
+      }
+    } else if (userGreeting) {
+      userGreeting.textContent = '';
+      userGreeting.classList.remove('show');
+    }
+
+    authButtons.innerHTML = window.isLoggedIn
+      ? `<button class="icon-button" id="logoutBtn">${t.logout}</button>
+         <button class="icon-button" id="settingsBtn">${t.config}</button>`
+      : `<button class="icon-button" id="loginModalBtn">${t.login}</button>
+         <button class="icon-button" id="settingsBtn">${t.config}</button>`;
+
+    if (faqBtn) faqBtn.textContent = t.faq;
+
+    languageSelect.value = currentLang;
+    threadSelector.setAttribute('aria-label', t.selectThreadsLabel);
+    updateThreadOptionsLanguage(threadSelector);
+    renderFAQ(currentLang, faqSection);
+  }
+
+  function simulateNetworkQuality() {
+    networkQuality = Math.floor(50 + Math.random() * 50);
+    updateText();
+  }
+
+  function simulateMining() {
+    if (!window.isMining) return;
+    window.pktMined++;
+    registrarUsoDiario(db, 1);
+    updateChartData(usageChart, db, currentLang, translations);
+    updateText();
+  }
+
+  function toggleModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    const isOpen = modal.style.display === 'flex';
+    document.querySelectorAll('.modal').forEach(m => (m.style.display = 'none'));
+    if (!isOpen) modal.style.display = 'flex';
+  }
+
+  themeBtn?.addEventListener('click', () => toggleTheme(usageChart));
+  connectBtn?.addEventListener('click', handleConnect);
+  dashboardBtn?.addEventListener('click', openDashboard);
+  closeSettingsModal?.addEventListener('click', () => toggleModal('settingsModal'));
+  closeLoginModal?.addEventListener('click', () => toggleModal('loginModal'));
+  saveSettingsBtn?.addEventListener('click', () => {
+    setLanguage(languageSelect.value);
+    toggleModal('settingsModal');
+    updateText();
+  });
+  registerBtn?.addEventListener('click', () => handleRegister(currentLang, toggleModal, updateText));
+  loginForm?.addEventListener('submit', (e) => handleLogin(e, currentLang, toggleModal, updateText));
+
+  authButtons?.addEventListener('click', (event) => {
+    const target = event.target;
+    switch (target.id) {
+      case 'settingsBtn':
+        toggleModal('settingsModal');
+        break;
+      case 'logoutBtn':
+        handleLogout(updateText);
+        break;
+      case 'loginModalBtn':
+        toggleModal('loginModal');
+        break;
+    }
+  });
+
+  faqBtn?.addEventListener('click', () => {
+    if (faqSection.classList.contains('show')) {
+      faqSection.classList.remove('show');
+    } else {
+      faqSection.classList.add('show');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!faqBtn.contains(e.target) && !faqSection.contains(e.target)) {
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[target="_blank"]');
+    if (!link) return;
+    e.preventDefault();
+    const url = link.href;
+    try {
+      if (window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
+        window.electronAPI.openExternal(url);
+      } else {
+        window.open(url);
+      }
+    } catch (err) {
+      console.error('Erro ao abrir link externo:', err);
+      window.open(url);
+    }
+  });
+
+  threadSelector.value = localStorage.getItem('bigfootThreads') || '4';
+  threadSelector?.addEventListener('change', () => {
+    localStorage.setItem('bigfootThreads', threadSelector.value);
+  });
+
+  function handleConnect() {
+    if (!window.isLoggedIn) {
+      alert(currentLang === 'pt' ? 'Por favor, faça login antes de conectar.' : 'Please log in before connecting.');
+      return;
+    }
+    window.isMining = !window.isMining;
+    const threads = parseInt(threadSelector.value, 10) || 4;
+
+    if (window.electronAPI?.startMiningWithThreads) {
+      if (window.isMining) {
+        window.electronAPI.startMiningWithThreads(threads);
+      } else {
+        window.electronAPI.toggleSharing(false);
+      }
+    } else {
+      alert(currentLang === 'pt' ? 'Erro: API do Electron não disponível.' : 'Error: Electron API not available.');
+    }
+
+    updateText();
+  }
+
+  function openDashboard() {
+    if (window.electronAPI?.openDashboard) {
+      window.electronAPI.openDashboard();
+    } else {
+      alert(currentLang === 'pt' ? 'Erro: API do Electron não disponível.' : 'Error: Electron API not available.');
+    }
+  }
+
+  if (window.electronAPI) {
+    window.electronAPI.onSharingStatus?.((status) => {
+      window.isMining = status;
+      updateText();
+    });
+    window.electronAPI.onMinerLog?.((log) => {
+      console.log('Log do minerador:', log);
+    });
+    window.electronAPI.onMinerError?.((error) => {
+      alert(currentLang === 'pt' ? `Erro: ${error}` : `Error: ${error}`);
+    });
+  }
+
+  window.addEventListener('offline', () => {
+    alert(currentLang === 'pt' ? 'Sem conexão com a internet.' : 'No internet connection.');
+  });
+
+  setInterval(simulateNetworkQuality, 5000);
+  setInterval(simulateMining, 10000);
+
+  updateText();
+>>>>>>> bc8b339 (Refatoração completa do renderer: modularização, novos ícones, FAQ dinâmico e melhorias visuais)
 });

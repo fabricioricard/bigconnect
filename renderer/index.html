@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -333,4 +334,128 @@
   </div>
 </body>
 
+=======
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.jsdelivr.net; connect-src 'self' ws: wss: https://bigfoot-connect-site.vercel.app https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://*.googleapis.com https://*.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+  <title>BIGFOOT Connect</title>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Your renderer script as ES module -->
+  <script type="module" src="renderer.js"></script>
+</head>
+
+<body>
+  <header>
+    <div class="left-buttons">
+      <button class="icon-button" id="themeBtn" aria-label="Alternar tema claro/escuro">🌓 Tema</button>
+    </div>
+    <div class="header-center">
+  <img src="logo.png" alt="Logo BIGFOOT" class="logo" />
+  <span class="brand-name">
+    <span class="brand-left">BIGFOOT</span>
+    <span class="brand-right">Connect</span>
+  </span>
+</div>
+    <div class="right-buttons" id="authButtons">
+      <!-- Botões de autenticação e F.A.Q serão preenchidos dinamicamente -->
+    </div>
+    <span id="userGreeting"></span>
+  </header>
+
+  <div id="faqButtonContainer">
+    <button class="icon-button" id="faqBtn" aria-label="Abrir FAQ">❓ F.A.Q</button>
+    <section id="faqSection" class="faq">
+      <!-- Conteúdo do FAQ será renderizado aqui -->
+    </section>
+  </div>
+
+  <main>
+    <div class="main-content">
+      <div class="center-panel">
+        <div class="tokens">
+          <strong id="threadsLabel">Nível de Compartilhamento</strong>
+          <select id="threadSelector" aria-label="Selecione o nível de compartilhamento">
+            <option value="1" data-en="Low" data-pt="Baixo">🔹 Baixo</option>
+            <option value="2" data-en="Medium" data-pt="Médio">🔸 Médio</option>
+            <option value="3" data-en="High" data-pt="Alto">🔶 Alto</option>
+            <option value="4" data-en="Maximum" data-pt="Máximo" selected>🚀 Máximo</option>
+          </select>
+        </div>
+        <button class="big-button" id="connectBtn">Conectar</button>
+        <div class="status">
+          <strong>Status:</strong> <span id="statusText">Desconectado</span>
+        </div>
+        <div class="quality">
+          <strong>Qualidade da Rede:</strong> <span id="networkQualityValue">--</span>
+        </div>
+        <div class="dashboard-button">
+          <button class="icon-button" id="dashboardBtn">Dashboard</button>
+        </div>
+      </div>
+      <button id="toggleGraphBtn" class="icon-button" aria-label="Ocultar ou mostrar gráfico">Ocultar Gráfico</button>
+      <div class="usage-graph">
+        <h2 id="usageGraphTitle">Histórico de Compartilhamento</h2>
+        <canvas id="usageChart"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-content">
+      <span class="close" id="closeSettingsModal" aria-label="Fechar modal de configurações">×</span>
+      <h3 id="settingsTitle">Configurações</h3>
+      <label for="languageSelect">Idioma:</label>
+      <select id="languageSelect" name="languageSelect" aria-label="Selecionar idioma">
+        <option value="en">English</option>
+        <option value="pt" selected>Português</option>
+      </select>
+      <button class="icon-button" id="saveSettingsBtn" aria-label="Salvar configurações">Salvar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="modal-content">
+      <span class="close" id="closeLoginModal" aria-label="Fechar modal de login">×</span>
+      <h3 id="loginTitle">Entrar / Cadastrar</h3>
+      <form id="loginForm" novalidate>
+        <input type="email" id="userEmail" placeholder="Seu e-mail" aria-label="E-mail do usuário" autocomplete="email" required />
+        <input type="password" id="userPassword" placeholder="Senha" aria-label="Senha" autocomplete="current-password" required />
+        <button class="icon-button" id="loginBtn" type="submit" aria-label="Entrar">Entrar</button>
+        <button class="icon-button" id="registerBtn" type="button" aria-label="Cadastrar">Cadastrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="socialIcons">
+    <a href="https://x.com/BIGFOOT_Connect" target="_blank" aria-label="X">
+      <img src="icons/x.png" alt="X" />
+    </a>
+    <a href="https://www.youtube.com/@BIGFOOTConnect" target="_blank" aria-label="YouTube">
+      <img src="icons/youtube.png" alt="YouTube" />
+    </a>
+    <a href="https://discord.gg/mkfmncN5Sa" target="_blank" aria-label="Discord">
+      <img src="icons/discord.png" alt="Discord" />
+    </a>
+    <a href="https://t.me/+qrkA9s2VTxVhMzcx" target="_blank" aria-label="Telegram">
+      <img src="icons/telegram.png" alt="Telegram" />
+    </a>
+  </div>
+</body>
+
+>>>>>>> bc8b339 (Refatoração completa do renderer: modularização, novos ícones, FAQ dinâmico e melhorias visuais)
 </html>
